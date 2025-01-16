@@ -1,31 +1,61 @@
 ---
-title: OP Supervisor
+title: OP-Supervisor
 lang: en-US
-description: Learn the basics of OP Supervisor.
+description: Learn the basics of OP-Supervisor.
 ---
 
 import { Callout, Tabs, Steps } from 'nextra/components'
 
-# OP Supervisor
+# OP-Supervisor
 
-<Callout>
-  Interop is currently in active development and not yet ready for production use. The information provided here may change. Check back regularly for the most up-to-date information.
-</Callout>
+import { InteropCallout } from '@/components/WipCallout'
 
-OP Supervisor is a service that verifies cross-chain messages and manages interoperability between chains in the OP Stack. It serves as a hub where each `op-node` can index the data needed for cross-chain verification. Chain operators and teams running full nodes like RPC providers are expected to run this service.
-Some features and benefits include:
+<InteropCallout />
 
-*   Enables secure cross-chain message passing on the Superchain
-*   Provides a unified point for managing interoperability data
-*   Supports multiple networks simultaneously
-*   Offers potential for public endpoints to aid in node synchronization
+The *OP-Supervisor* service verifies cross-chain messages and manages interoperability between OP Stack chains.
+Every full node on a blockchain that receive cross-chain messages needs to run OP-Supervisor to verify them.
 
-## How cross-chain message verification works
+```mermaid
 
-OP Supervisor verifies messages between different chains in the OP Stack, reducing the risk of invalid or malicious cross-chain interactions.⁠ It centralizes the verification process, which reduces the complexity of operating individual nodes⁠.⁠
+graph LR
 
-*   `op-geth`: queries `op-supervisor` during block-building to verify if a message is sufficiently safe to include. This process involves checking each executing message and potentially undoing transactions if conflicts or unknown states are encountered.
-*   `op-node`: queries cross-chain safety information and coordinates safety updates between OP stack nodes and `op-supervisor`. It uses the API provided by `op-supervisor` to perform actions like:
+  classDef chain fill:#FFE
+  classDef transparent fill:none, stroke:none
+  
+  subgraph chain1[OP Stack chain #1]
+    node1[OP Node]
+    super1[OP-Supervisor]
+    geth1[Execution Engine]
+    node1<-->super1<-->geth1<-->node1
+  end
+  subgraph X[ ]
+    chain2[OP Stack chain #2]
+    chain3[OP Stack chain #3]
+    l1node[L1 Consensus Layer]
+  end
+
+  chain2-->|log events|super1
+  chain3-->|log events|super1
+  l1node-->|block status|super1
+
+  class chain1,chain2,chain3 chain
+  class X transparent
+```
+
+## How the other components use OP-Supervisor
+
+### Execution engine (typically `op-geth`)
+
+The execution engine queries `op-supervisor` during block building to verify if a message is [sufficiently safe](./explainer#block-safety-levels) to include. 
+This process involves checking each executing message and potentially removing transactions if conflicts or unknown states are encountered.
+
+## `op-node`
+
+GOON GOON GOON
+
+`op-node` is responsible for tracking blocks' safely levels.
+It uses `op-supervisor` to get the block safely levels of 
+`op-node` uses the API provided by `op-supervisor` to perform actions like:
     *   Updating and retrieving various safety levels
     *   Checking and returning the `cross-unsafe` head for a given chain
     *   Attempting to promote a block to `cross-safe` status
@@ -33,7 +63,7 @@ OP Supervisor verifies messages between different chains in the OP Stack, reduci
 
 ## Log data indexing and management
 
-OP Supervisor acts as a hub for indexing data that every `op-node` needs to cross-verify with other chains, centralizing the process of managing interoperability data. Maintains the integrity of cross-chain interactions by tracking safety changes⁠ across the Superchain, ensuring consistent application of invalid dependency resolutions. ⁠
+OP-Supervisor acts as a hub for indexing data that every `op-node` needs to cross-verify with other chains, centralizing the process of managing interoperability data. Maintains the integrity of cross-chain interactions by tracking safety changes⁠ across the Superchain, ensuring consistent application of invalid dependency resolutions. ⁠
 
 `op-supervisor` indexes two types of cross-chain dependencies:
 
@@ -42,7 +72,7 @@ OP Supervisor acts as a hub for indexing data that every `op-node` needs to cros
 
 ## API for cross-chain safety
 
-OP Supervisor provides an interface for `op-node` to query cross-chain safety information and coordinate safety updates between OP stack nodes and `op-supervisor⁠⁠`. OP-Supervisor uses a global read API to determine **message safety** and **block safety,** utilizing both the events index and the safety index (See op-supervisor's [log data indexing](#log-data-indexing-and-management)). The API is designed to handle potential L1 reorgs that can affect the validity of cross-chain messages⁠.
+OP-Supervisor provides an interface for `op-node` to query cross-chain safety information and coordinate safety updates between OP stack nodes and `op-supervisor⁠⁠`. OP-Supervisor uses a global read API to determine **message safety** and **block safety,** utilizing both the events index and the safety index (See op-supervisor's [log data indexing](#log-data-indexing-and-management)). The API is designed to handle potential L1 reorgs that can affect the validity of cross-chain messages⁠.
 
 Key API methods include:
 
@@ -59,7 +89,7 @@ For a full listing of API names, see the [`op-supervisor` client](https://github
 
 ## RPC access to all chains
 
-OP Supervisor requires RPC access to all chains in the dependency set. This allows `op-supervisor` to verify cross-chain messages and sync data across multiple networks simultaneously, such as OP Mainnet and Base nodes using the same instance.
+OP-Supervisor requires RPC access to all chains in the dependency set. This allows `op-supervisor` to verify cross-chain messages and sync data across multiple networks simultaneously, such as OP Mainnet and Base nodes using the same instance.
 
 Benefits:
 
